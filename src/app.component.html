@@ -1,0 +1,135 @@
+
+<main class="min-h-screen container mx-auto p-4 sm:p-6 lg:p-8 flex flex-col items-center">
+  <header class="w-full max-w-4xl text-center mb-8">
+    <div class="flex items-center justify-center gap-4 mb-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.5 15.5v-4l-3-2.25 3-2.25v-4l7.5 6-7.5 6z"/>
+      </svg>
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-yellow-500">
+        Brand Identity Generator
+      </h1>
+    </div>
+    <p class="text-stone-400 mt-2 text-lg">
+      Describe your company's mission, and let AI craft your complete brand bible.
+    </p>
+  </header>
+
+  <section class="w-full max-w-4xl bg-stone-800/50 rounded-2xl shadow-2xl p-6 sm:p-8 border border-stone-700">
+    <div class="flex flex-col gap-4">
+      <label for="mission" class="text-lg font-medium text-stone-300">Your Company Mission</label>
+      <textarea
+        id="mission"
+        rows="4"
+        class="w-full bg-stone-900 border border-stone-600 rounded-lg p-4 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors duration-200 placeholder-stone-500"
+        placeholder="e.g., To empower small businesses with accessible and affordable financial tools, fostering growth and sustainability."
+        (input)="mission.set($any($event.target).value)"
+        [value]="mission()"
+      ></textarea>
+      <button
+        (click)="generateBrandIdentity()"
+        [disabled]="state() === 'loading' || mission().trim().length < 10"
+        class="w-full sm:w-auto self-end px-8 py-3 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-500 disabled:bg-stone-600 disabled:cursor-not-allowed disabled:opacity-70 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-stone-900 focus:ring-amber-500"
+      >
+        @if (state() === 'loading') {
+          <div class="flex items-center justify-center">
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Generating...</span>
+          </div>
+        } @else {
+          <span>Generate Identity</span>
+        }
+      </button>
+    </div>
+  </section>
+
+  <section class="w-full max-w-4xl mt-8">
+    @switch (state()) {
+      @case ('loading') {
+        <div class="text-center p-8 bg-stone-800/50 rounded-2xl border border-stone-700">
+          <p class="text-xl font-medium text-amber-400">{{ loadingMessage() }}</p>
+          <div class="mt-4 h-2 w-full bg-stone-700 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-amber-500 to-yellow-500 animate-pulse" [style.width.%]="loadingProgress()"></div>
+          </div>
+        </div>
+      }
+      @case ('error') {
+        <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg relative" role="alert">
+          <strong class="font-bold">Error: </strong>
+          <span class="block sm:inline">{{ error() }}</span>
+        </div>
+      }
+      @case ('success') {
+        @if (brandIdentity(); as identity) {
+          <div class="grid grid-cols-1 gap-8">
+            <!-- Logos -->
+            <div class="bg-stone-800/50 rounded-2xl p-6 border border-stone-700">
+              <h2 class="text-2xl font-bold mb-4 text-stone-200">Logos</h2>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                <div class="md:col-span-1 flex flex-col items-center">
+                  <h3 class="text-lg font-semibold mb-2 text-stone-400">Primary Logo</h3>
+                  @if (primaryLogo()) {
+                    <div class="w-48 h-48 bg-stone-700 rounded-lg flex items-center justify-center p-4">
+                      <img [src]="primaryLogo()" alt="Primary Logo" class="max-w-full max-h-full object-contain">
+                    </div>
+                  }
+                </div>
+                <div class="md:col-span-2">
+                   <h3 class="text-lg font-semibold mb-2 text-stone-400">Secondary Marks</h3>
+                   <div class="flex gap-4 justify-center md:justify-start">
+                      @for(mark of secondaryMarks(); track $index) {
+                        <div class="w-24 h-24 bg-stone-700 rounded-lg flex items-center justify-center p-2">
+                          <img [src]="mark" alt="Secondary Mark {{$index + 1}}" class="max-w-full max-h-full object-contain">
+                        </div>
+                      }
+                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="bg-stone-800/50 rounded-2xl p-6 border border-stone-700">
+              <h2 class="text-2xl font-bold mb-4 text-stone-200">Color Palette</h2>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                @for (color of identity.colors; track color.hex) {
+                  <div class="flex flex-col">
+                    <div class="h-24 w-full rounded-md" [style.backgroundColor]="color.hex"></div>
+                    <div class="p-2 text-sm">
+                      <p class="font-bold text-stone-300">{{ color.name }}</p>
+                      <div class="flex items-center gap-2 mt-1">
+                        <span class="text-stone-400 font-mono">{{ color.hex }}</span>
+                        <button (click)="copyToClipboard(color.hex)" title="Copy hex code" class="text-stone-500 hover:text-white transition">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"></path><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h6a2 2 0 00-2-2H5z"></path></svg>
+                        </button>
+                      </div>
+                      <p class="text-stone-500 text-xs mt-1">{{ color.usage }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Typography -->
+            <div class="bg-stone-800/50 rounded-2xl p-6 border border-stone-700">
+              <h2 class="text-2xl font-bold mb-4 text-stone-200">Typography</h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="text-lg font-semibold text-stone-400 mb-2">Header Font: <span class="text-amber-400">{{ identity.fonts.header.name }}</span></h3>
+                  <p class="text-4xl" [style.fontFamily]="identity.fonts.header.name + ', sans-serif'">The quick brown fox jumps over the lazy dog.</p>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-stone-400 mb-2">Body Font: <span class="text-amber-400">{{ identity.fonts.body.name }}</span></h3>
+                  <p class="text-base leading-relaxed" [style.fontFamily]="identity.fonts.body.name + ', sans-serif'">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    }
+  </section>
+</main>
